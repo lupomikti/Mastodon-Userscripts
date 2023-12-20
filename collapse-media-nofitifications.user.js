@@ -7,6 +7,8 @@
 // @license      MIT
 // @match        https://baraag.net/notifications
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=baraag.net
+// @updateURL    https://github.com/lupomikti/Mastodon-Userscripts/raw/main/collapse-media-notifications.user.js
+// @downloadURL  https://github.com/lupomikti/Mastodon-Userscripts/raw/main/collapse-media-notifications.user.js
 // @grant        none
 // @run-at       document-end
 // ==/UserScript==
