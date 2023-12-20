@@ -1,12 +1,16 @@
 // ==UserScript==
-// @name         Collapse Media in Notifications By Default
+// @name         Mastodon - Collapse Media in Notifications By Default
 // @namespace    http://tampermonkey.net/
-// @version      0.7.2
+// @version      0.7.3
 // @description  Adds a collapsible toggle to posts in your notifications for media
 // @author       LupoMikti
 // @license      MIT
+// @match        https://mastodon.social/notifications
+// @match        https://mstdn.jp/notifications
+// @match        https://mastodon.art/notifications
+// @match        https://pawoo.net/notifications
 // @match        https://baraag.net/notifications
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=baraag.net
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=mastodon.social
 // @updateURL    https://github.com/lupomikti/Mastodon-Userscripts/raw/main/collapse-media-notifications.user.js
 // @downloadURL  https://github.com/lupomikti/Mastodon-Userscripts/raw/main/collapse-media-notifications.user.js
 // @grant        none
