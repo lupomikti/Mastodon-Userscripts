@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Mastodon - Collapse Media in Notifications By Default
 // @namespace    http://tampermonkey.net/
-// @version      0.7.4
+// @version      0.7.5
 // @description  Adds a collapsible toggle to posts in your notifications for media
 // @author       LupoMikti
 // @license      MIT
@@ -32,7 +32,7 @@
     filter: brightness(1.5);
 }
 
-.status-card.expanded .status-card__image {
+.notification .status-card.expanded .status-card__image {
     visibility: collapse;
 }
 `
@@ -95,15 +95,24 @@
         return setTimeout(init, 500)
     }
 
+    function getNthAncestor(node, n) {
+        while (node && n > 0) {
+            node = node.parentNode
+            n--
+        }
+        return node
+    }
+
     // Inserts the toggle span into a post
     function insertToggle(mediaSection, parentArticleId = null, wasKeptOpen = 'false') {
         if (!mediaSection) return
         if (mediaSection.parentNode.querySelector('.media-toggle')) return
         const showingMedia = (wasKeptOpen === 'true')
         if (!parentArticleId) {
-            parentArticleId = mediaSection.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('data-id') // yeah not the best line of code I've written
+            parentArticleId = getNthAncestor(mediaSection, 6).getAttribute('data-id')
         }
-        mediaSection.insertAdjacentHTML('beforebegin',`<div class="media-toggle" data-toggle-target="article[data-id='${parentArticleId}'] .${mediaSection.className}"><span>Click to ${showingMedia ? 'hide' : 'show'} media</span></div>`)
+        mediaSection.insertAdjacentHTML('beforebegin',
+            `<div class="media-toggle" data-toggle-target="article[data-id='${parentArticleId}'] .${mediaSection.className}"><span>Click to ${showingMedia ? 'hide' : 'show'} media</span></div>`)
         mediaSection.parentNode.querySelector('.media-toggle').addEventListener('click', doToggle)
         if (!showingMedia) mediaSection.style = mediaSection.style.cssText + " display: none;"
     }
