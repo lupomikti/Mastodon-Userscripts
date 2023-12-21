@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name         Mastodon - Collapse Media in Notifications By Default
 // @namespace    http://tampermonkey.net/
-// @version      0.7.3
+// @version      0.7.4
 // @description  Adds a collapsible toggle to posts in your notifications for media
 // @author       LupoMikti
 // @license      MIT
-// @match        https://mastodon.social/notifications
-// @match        https://mstdn.jp/notifications
-// @match        https://mastodon.art/notifications
-// @match        https://pawoo.net/notifications
-// @match        https://baraag.net/notifications
+// @match        https://mastodon.social/*
+// @match        https://mstdn.jp/*
+// @match        https://mastodon.art/*
+// @match        https://pawoo.net/*
+// @match        https://baraag.net/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=mastodon.social
 // @updateURL    https://github.com/lupomikti/Mastodon-Userscripts/raw/main/collapse-media-notifications.user.js
 // @downloadURL  https://github.com/lupomikti/Mastodon-Userscripts/raw/main/collapse-media-notifications.user.js
@@ -42,7 +42,7 @@
     XMLHttpRequest.prototype.open = function(method, url) {
         this.addEventListener('load', function() {
             // console.log('XHR finished loading', method, this.status, url);
-            if (url.includes('api/v1/notifications')) {
+            if (url.includes('api/v1/notifications') && window.location.pathname.includes(`/notifications`)) {
                 return setTimeout(init, 1000)
             }
         })
@@ -52,6 +52,17 @@
         })
         origOpen.apply(this, arguments)
     }
+
+    window.addEventListener('load', () => {
+        let oldHref = document.location.href
+        const bodyObserver = new MutationObserver((mutationList) => {
+            if (oldHref !== document.location.href) {
+                oldHref = document.location.href
+                refreshScript()
+            }
+        })
+        bodyObserver.observe(document.body, {childList: true, subtree: true})
+    })
 
     // We cannot inject a style element without the nonce, so get it and use it
     let styleNonce = document.querySelector('meta[name=style-nonce]').content
@@ -80,6 +91,7 @@
     }
 
     function refreshScript() {
+        if (!document.location.pathname.includes(`/notifications`)) return
         return setTimeout(init, 500)
     }
 
