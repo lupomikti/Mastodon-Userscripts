@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Mastodon - Collapse Media in Notifications By Default
 // @namespace    http://tampermonkey.net/
-// @version      0.7.5
+// @version      0.8.0
 // @description  Adds a collapsible toggle to posts in your notifications for media
 // @author       LupoMikti
 // @license      MIT
@@ -30,6 +30,13 @@
 .muted .media-toggle span {
     color: #606984;
     filter: brightness(1.5);
+}
+
+article:not([data-toggle-open]) .notification .status > .media-gallery,
+article:not([data-toggle-open]) .notification .status > .media-gallery__item,
+article[data-toggle-open="false"] .notification .status > .media-gallery,
+article[data-toggle-open="false"] .notification .status > .media-gallery__item {
+    display: none;
 }
 
 .notification .status-card.expanded .status-card__image {
@@ -114,7 +121,6 @@
         mediaSection.insertAdjacentHTML('beforebegin',
             `<div class="media-toggle" data-toggle-target="article[data-id='${parentArticleId}'] .${mediaSection.className}"><span>Click to ${showingMedia ? 'hide' : 'show'} media</span></div>`)
         mediaSection.parentNode.querySelector('.media-toggle').addEventListener('click', doToggle)
-        if (!showingMedia) mediaSection.style = mediaSection.style.cssText + " display: none;"
     }
 
     // Click handler for the toggle span
@@ -125,14 +131,14 @@
         let parentArticleSelector = toggleTargetSelector?.replace(/ \..+/,'')
         let toggleTarget = document.querySelector(toggleTargetSelector)
         let parentArticle = document.querySelector(parentArticleSelector)
-        if (toggleTarget.style.cssText.includes("display: none;")) {
+        if (!toggleTarget.checkVisibility()) {
             parentArticle.setAttribute('data-toggle-open', 'true')
-            toggleTarget.style = toggleTarget.style.cssText.replace(" display: none;","")
+            toggleTarget.style = toggleTarget.style.cssText + " display: grid;"
             toggle.childNodes[0].innerText = "Click to hide media"
         }
         else {
             parentArticle.setAttribute('data-toggle-open', 'false')
-            toggleTarget.style = toggleTarget.style.cssText + " display: none;"
+            toggleTarget.style = toggleTarget.style.cssText.replace(" display: grid;", "")
             toggle.childNodes[0].innerText = "Click to show media"
         }
     }
