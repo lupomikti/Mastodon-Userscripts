@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Mastodon - Collapse Media in Notifications By Default
 // @namespace    http://tampermonkey.net/
-// @version      0.8.0
+// @version      0.9.0
 // @description  Adds a collapsible toggle to posts in your notifications for media
 // @author       LupoMikti
 // @license      MIT
@@ -34,8 +34,10 @@
 
 article:not([data-toggle-open]) .notification .status > .media-gallery,
 article:not([data-toggle-open]) .notification .status > .media-gallery__item,
+article:not([data-toggle-open]) .notification .status div:has(.video-player),
 article[data-toggle-open="false"] .notification .status > .media-gallery,
-article[data-toggle-open="false"] .notification .status > .media-gallery__item {
+article[data-toggle-open="false"] .notification .status > .media-gallery__item,
+article[data-toggle-open="false"] .notification .status div:has(.video-player) {
     display: none;
 }
 
@@ -83,16 +85,12 @@ article[data-toggle-open="false"] .notification .status > .media-gallery__item {
         notificationColumn = document.querySelector('.column[aria-label="Notifications"] .item-list')
         let initialPostsWithMedia = document.querySelectorAll(`.item-list article[style=""] .notification .status > .media-gallery,
             .item-list article[style=""] .notification .status > .media-gallery__item,
+            .item-list article[style=""] .notification .status div:has(.video-player),
             .item-list article:not(article[style]) .notification .status > .media-gallery,
-            .item-list article:not(article[style]) .notification .status > .media-gallery__item`)
+            .item-list article:not(article[style]) .notification .status > .media-gallery__item,
+            .item-list article:not(article[style]) .notification .status div:has(.video-player)`)
 
         initialPostsWithMedia.forEach((mediaSection) => {insertToggle(mediaSection)})
-
-        let insertedToggles = document.querySelectorAll('.media-toggle')
-
-        for (let toggle of insertedToggles) {
-            toggle.addEventListener('click', doToggle)
-        }
 
         startObserving()
     }
@@ -118,8 +116,9 @@ article[data-toggle-open="false"] .notification .status > .media-gallery__item {
         if (!parentArticleId) {
             parentArticleId = getNthAncestor(mediaSection, 6).getAttribute('data-id')
         }
+        const targetSelector = mediaSection.className ? '.' + mediaSection.className : 'div:has(>.video-player)'
         mediaSection.insertAdjacentHTML('beforebegin',
-            `<div class="media-toggle" data-toggle-target="article[data-id='${parentArticleId}'] .${mediaSection.className}"><span>Click to ${showingMedia ? 'hide' : 'show'} media</span></div>`)
+            `<div class="media-toggle" data-toggle-target="article[data-id='${parentArticleId}'] ${targetSelector}"><span>Click to ${showingMedia ? 'hide' : 'show'} media</span></div>`)
         mediaSection.parentNode.querySelector('.media-toggle').addEventListener('click', doToggle)
     }
 
@@ -128,7 +127,7 @@ article[data-toggle-open="false"] .notification .status > .media-gallery__item {
         if(event.target.nodeName !== 'SPAN') return
         let toggle = event.currentTarget
         let toggleTargetSelector = toggle?.getAttribute('data-toggle-target')
-        let parentArticleSelector = toggleTargetSelector?.replace(/ \..+/,'')
+        let parentArticleSelector = toggleTargetSelector?.split(' ')[0]
         let toggleTarget = document.querySelector(toggleTargetSelector)
         let parentArticle = document.querySelector(parentArticleSelector)
         if (!toggleTarget.checkVisibility()) {
@@ -151,7 +150,7 @@ article[data-toggle-open="false"] .notification .status > .media-gallery__item {
                     if (mutation.target.nodeName !== 'ARTICLE') continue // if the target is not an article element skip
                     if (!mutation.oldValue) continue // if the target's old attribute value is empty, skip
                     if (mutation.target.style.cssText) continue // if the target article's style attribute is NOT being changed to empty, skip
-                    insertToggle(mutation.target.querySelector('.notification .status > .media-gallery, .notification .status > .media-gallery__item'),
+                    insertToggle(mutation.target.querySelector('.notification .status > .media-gallery, .notification .status > .media-gallery__item, .notification .status div:has(.video-player)'),
                                  mutation.target.getAttribute('data-id'),
                                  mutation.target.getAttribute('data-toggle-open') || 'false')
                     // continue
