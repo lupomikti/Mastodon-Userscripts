@@ -1,0 +1,26 @@
+/* ==UserStyle==
+@name           Baraag Expanded Layout
+@version        1.0.3
+@author         lymalyk
+@description    Widens the main content column on Baraag
+@namespace      userstyles.world/user/lymalyk
+@license        MIT
+@supportURL     https://github.com/lupomikti/Mastodon-Userscripts/issues
+==/UserStyle== */
+
+@-moz-document url-prefix("https://baraag.net") {
+    @media screen and (min-width: 1700px) {
+        .columns-area__panels__main {
+            max-width: 900px;
+        }
+
+        .columns-area__panels__pane__inner {
+            width: auto;
+            max-width: 400px;
+        }
+
+        .compose-panel {
+            width: 350px;
+        }
+    }
+}
