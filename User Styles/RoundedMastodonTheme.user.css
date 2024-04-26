@@ -4,10 +4,29 @@
 @author       harzu, edited and maintained by lymalyk
 @description  A rounded, modern and flat theme for Mastodon instances. Works ONLY with default Mastodon dark theme.
 @version      1.0.0
-@license      CC BY-SA 4.0
+@license      CC-BY-SA-4.0
 @supportURL   https://github.com/lupomikti/Mastodon-Userscripts/issues
 ==/UserStyle== */
 @-moz-document domain("baraag.net"), domain("mastodon.social"), domain("mstdn.jp"), domain("mastodon.art") {
+    /* A little foreword
+     *
+     * The orginal style, which can be found on Userstyles.org Archive and was only made for baraag.net,
+     * was licensed under CC0-1.0. As far as I can tell it is not being updated or maintained anywhere
+     * else, or at the very least, is not being hosted on a site that the Stylus extension can use to
+     * present the style to users.
+     *
+     * As I had found the original in October 2023 and liked what it was doing, I wanted to make use of it.
+     * I installed it and over time started fixing the things I noticed were broken or standing out.
+     * Eventually I decided that since I was putting in the effort, I might as well make what I've done
+     * available to the public. To sort of stick to the orginal author's intentions, I've decided to stick
+     * with a Creative Commons license for this.
+     *
+     * I welcome any suggestions for options and improvements to this style at the support URL above.
+     * And of course a big thank you to the original author, harzu, for creating this theme.
+    */
+
+    /* TODO: make these colors settings in Stylus so one does not need a template or to edit this directly */
+
     /*You can change the accent colors in the ROOT section to easily edit accent colors, templates here: https://pastebin.com/TPGVk5xd */
     /*lavender*/
     :root {
