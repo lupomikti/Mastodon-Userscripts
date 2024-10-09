@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Mastodon - Collapse Media in Notifications By Default
 // @namespace    http://tampermonkey.net/
-// @version      0.9.0
+// @version      1.0.0
 // @description  Adds a collapsible toggle to posts in your notifications for media
 // @author       LupoMikti
 // @license      MIT
@@ -22,26 +22,28 @@
 
     let css = `.media-toggle {
     margin-top: 10px;
+    margin-inline-start: 48px;
+    width: calc(100% - 48px);
     & span {
         cursor: pointer;
     }
 }
 
-.muted .media-toggle span {
+.notification-ungrouped:not(.notification-ungrouped--unread) .media-toggle span {
     color: #606984;
     filter: brightness(1.5);
 }
 
-article:not([data-toggle-open]) .notification .status > .media-gallery,
-article:not([data-toggle-open]) .notification .status > .media-gallery__item,
-article:not([data-toggle-open]) .notification .status div:has(.video-player),
-article[data-toggle-open="false"] .notification .status > .media-gallery,
-article[data-toggle-open="false"] .notification .status > .media-gallery__item,
-article[data-toggle-open="false"] .notification .status div:has(.video-player) {
+article:not([data-toggle-open]) .notification-ungrouped .status > .media-gallery,
+article:not([data-toggle-open]) .notification-ungrouped .status > .media-gallery__item,
+article:not([data-toggle-open]) .notification-ungrouped .status div:has(.video-player),
+article[data-toggle-open="false"] .notification-ungrouped .status > .media-gallery,
+article[data-toggle-open="false"] .notification-ungrouped .status > .media-gallery__item,
+article[data-toggle-open="false"] .notification-ungrouped .status div:has(.video-player) {
     display: none;
 }
 
-.notification .status-card.expanded .status-card__image {
+.notification-ungrouped .status-card.expanded .status-card__image {
     visibility: collapse;
 }
 `
@@ -51,7 +53,7 @@ article[data-toggle-open="false"] .notification .status div:has(.video-player) {
     XMLHttpRequest.prototype.open = function(method, url) {
         this.addEventListener('load', function() {
             // console.log('XHR finished loading', method, this.status, url);
-            if (url.includes('api/v1/notifications') && window.location.pathname.includes(`/notifications`)) {
+            if (url.includes('api/v2/notifications?') && window.location.pathname.includes(`/notifications`)) {
                 return setTimeout(init, 1000)
             }
         })
@@ -83,14 +85,20 @@ article[data-toggle-open="false"] .notification .status div:has(.video-player) {
 
     function init() {
         notificationColumn = document.querySelector('.column[aria-label="Notifications"] .item-list')
-        let initialPostsWithMedia = document.querySelectorAll(`.item-list article[style=""] .notification .status > .media-gallery,
-            .item-list article[style=""] .notification .status > .media-gallery__item,
-            .item-list article[style=""] .notification .status div:has(.video-player),
-            .item-list article:not(article[style]) .notification .status > .media-gallery,
-            .item-list article:not(article[style]) .notification .status > .media-gallery__item,
-            .item-list article:not(article[style]) .notification .status div:has(.video-player)`)
+        let initialPostsWithMedia = document.querySelectorAll(`.item-list article[style=""] .notification-ungrouped .status > .media-gallery,
+            .item-list article[style=""] .notification-ungrouped .status > .media-gallery__item,
+            .item-list article[style=""] .notification-ungrouped .status div:has(.video-player),
+            .item-list article:not(article[style]) .notification-ungrouped .status > .media-gallery,
+            .item-list article:not(article[style]) .notification-ungrouped .status > .media-gallery__item,
+            .item-list article:not(article[style]) .notification-ungrouped .status div:has(.video-player)`)
 
         initialPostsWithMedia.forEach((mediaSection) => {insertToggle(mediaSection)})
+
+//         let insertedToggles = document.querySelectorAll('.media-toggle')
+
+//         for (let toggle of insertedToggles) {
+//             toggle.addEventListener('click', doToggle)
+//         }
 
         startObserving()
     }
@@ -114,9 +122,9 @@ article[data-toggle-open="false"] .notification .status div:has(.video-player) {
         if (mediaSection.parentNode.querySelector('.media-toggle')) return
         const showingMedia = (wasKeptOpen === 'true')
         if (!parentArticleId) {
-            parentArticleId = getNthAncestor(mediaSection, 6).getAttribute('data-id')
+            parentArticleId = getNthAncestor(mediaSection, 7).getAttribute('data-id')
         }
-        const targetSelector = mediaSection.className ? '.' + mediaSection.className : 'div:has(>.video-player)'
+        const targetSelector = mediaSection.className ? mediaSection.className.split(' ').map(name => `.${name}`).join('') : 'div:has(>.video-player)'
         mediaSection.insertAdjacentHTML('beforebegin',
             `<div class="media-toggle" data-toggle-target="article[data-id='${parentArticleId}'] ${targetSelector}"><span>Click to ${showingMedia ? 'hide' : 'show'} media</span></div>`)
         mediaSection.parentNode.querySelector('.media-toggle').addEventListener('click', doToggle)
@@ -150,7 +158,7 @@ article[data-toggle-open="false"] .notification .status div:has(.video-player) {
                     if (mutation.target.nodeName !== 'ARTICLE') continue // if the target is not an article element skip
                     if (!mutation.oldValue) continue // if the target's old attribute value is empty, skip
                     if (mutation.target.style.cssText) continue // if the target article's style attribute is NOT being changed to empty, skip
-                    insertToggle(mutation.target.querySelector('.notification .status > .media-gallery, .notification .status > .media-gallery__item, .notification .status div:has(.video-player)'),
+                    insertToggle(mutation.target.querySelector('.notification-ungrouped .status > .media-gallery, .notification-ungrouped .status > .media-gallery__item, .notification-ungrouped .status div:has(.video-player)'),
                                  mutation.target.getAttribute('data-id'),
                                  mutation.target.getAttribute('data-toggle-open') || 'false')
                     // continue
