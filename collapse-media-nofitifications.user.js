@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Mastodon - Collapse Media in Notifications By Default
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.1.0
 // @description  Adds a collapsible toggle to posts in your notifications for media
 // @author       LupoMikti
 // @license      MIT
@@ -94,12 +94,6 @@ article[data-toggle-open="false"] .notification-ungrouped .status div:has(.video
 
         initialPostsWithMedia.forEach((mediaSection) => {insertToggle(mediaSection)})
 
-//         let insertedToggles = document.querySelectorAll('.media-toggle')
-
-//         for (let toggle of insertedToggles) {
-//             toggle.addEventListener('click', doToggle)
-//         }
-
         startObserving()
     }
 
@@ -108,25 +102,28 @@ article[data-toggle-open="false"] .notification-ungrouped .status div:has(.video
         return setTimeout(init, 500)
     }
 
-    function getNthAncestor(node, n) {
-        while (node && n > 0) {
+    function getAncestorWithDataId(node) {
+        while (node && Array.from(node.attributes).every(attr => attr.name !== 'data-id')) {
             node = node.parentNode
-            n--
         }
         return node
     }
 
     // Inserts the toggle span into a post
-    function insertToggle(mediaSection, parentArticleId = null, wasKeptOpen = 'false') {
+    function insertToggle(mediaSection, parentElementId = null, wasKeptOpen = 'false') {
         if (!mediaSection) return
         if (mediaSection.parentNode.querySelector('.media-toggle')) return
         const showingMedia = (wasKeptOpen === 'true')
-        if (!parentArticleId) {
-            parentArticleId = getNthAncestor(mediaSection, 7).getAttribute('data-id')
+        if (!parentElementId) {
+            parentElementId = getAncestorWithDataId(mediaSection)?.getAttribute('data-id')
+        }
+        if (!parentElementId) {
+            console.error("Failed to retrieve the element with the corresponding data-id")
+            return
         }
         const targetSelector = mediaSection.className ? mediaSection.className.split(' ').map(name => `.${name}`).join('') : 'div:has(>.video-player)'
         mediaSection.insertAdjacentHTML('beforebegin',
-            `<div class="media-toggle" data-toggle-target="article[data-id='${parentArticleId}'] ${targetSelector}"><span>Click to ${showingMedia ? 'hide' : 'show'} media</span></div>`)
+            `<div class="media-toggle" data-toggle-target="[data-id='${parentElementId}'] ${targetSelector}"><span>Click to ${showingMedia ? 'hide' : 'show'} media</span></div>`)
         mediaSection.parentNode.querySelector('.media-toggle').addEventListener('click', doToggle)
     }
 
@@ -135,16 +132,16 @@ article[data-toggle-open="false"] .notification-ungrouped .status div:has(.video
         if(event.target.nodeName !== 'SPAN') return
         let toggle = event.currentTarget
         let toggleTargetSelector = toggle?.getAttribute('data-toggle-target')
-        let parentArticleSelector = toggleTargetSelector?.split(' ')[0]
+        let parentElementSelector = toggleTargetSelector?.split(' ')[0]
         let toggleTarget = document.querySelector(toggleTargetSelector)
-        let parentArticle = document.querySelector(parentArticleSelector)
+        let parentElement = document.querySelector(parentElementSelector)
         if (!toggleTarget.checkVisibility()) {
-            parentArticle.setAttribute('data-toggle-open', 'true')
+            parentElement.setAttribute('data-toggle-open', 'true')
             toggleTarget.style = toggleTarget.style.cssText + " display: grid;"
             toggle.childNodes[0].innerText = "Click to hide media"
         }
         else {
-            parentArticle.setAttribute('data-toggle-open', 'false')
+            parentElement.setAttribute('data-toggle-open', 'false')
             toggleTarget.style = toggleTarget.style.cssText.replace(" display: grid;", "")
             toggle.childNodes[0].innerText = "Click to show media"
         }
@@ -155,39 +152,47 @@ article[data-toggle-open="false"] .notification-ungrouped .status div:has(.video
         const observeColumn = (mutationList) => {
             for (const mutation of mutationList) {
                 if (mutation.type === 'attributes') {
-                    if (mutation.target.nodeName !== 'ARTICLE') continue // if the target is not an article element skip
+                    const article = mutation.target
+                    if (article.nodeName !== 'ARTICLE') continue // if the target is not an article element skip
                     if (!mutation.oldValue) continue // if the target's old attribute value is empty, skip
-                    if (mutation.target.style.cssText) continue // if the target article's style attribute is NOT being changed to empty, skip
-                    insertToggle(mutation.target.querySelector('.notification-ungrouped .status > .media-gallery, .notification-ungrouped .status > .media-gallery__item, .notification-ungrouped .status div:has(.video-player)'),
-                                 mutation.target.getAttribute('data-id'),
-                                 mutation.target.getAttribute('data-toggle-open') || 'false')
-                    // continue
+                    if (article.style.cssText) continue // if the target article's style attribute is NOT being changed to empty, skip
+                    insertToggle(article.querySelector('.notification-ungrouped .status > .media-gallery, .notification-ungrouped .status > .media-gallery__item, .notification-ungrouped .status div:has(.video-player)'),
+                                 article.getAttribute('data-id'),
+                                 article.getAttribute('data-toggle-open') || 'false')
                 }
 
-                // for logging
-//                 if (mutation.type === 'childList') {
-//                     if (mutation.addedNodes.length > 0) {
-//                         console.log(`== Added Nodes ==`)
-//                         console.log(mutation.addedNodes)
-//                         console.log(`== End Nodes ==`)
-//                     }
+                if (mutation.type === 'childList') {
+                    const parent = mutation.target
+                    let movedNodes = []
+                    if (mutation.addedNodes.length > 0) {
+                        movedNodes = Array.from(mutation.addedNodes)
+                        if (!(parent.matches('div.status') && parent.hasAttribute('data-id') && movedNodes.some(node => node.matches('.media-gallery, .media-gallery__item, div:has(.video-player)')))) continue // if the target is not the parent of the media container we want, skip
+                        if (parent.hasAttribute('data-toggle-open') && parent.getAttribute('data-toggle-open') === 'true') {
+                            let mediaNode = movedNodes.find(node => node.matches('.media-gallery, .media-gallery__item, div:has(.video-player)'))
+                            mediaNode.style = mediaNode.style.cssText + " display: grid;"
+                        }
+                        insertToggle(parent.querySelector('.media-gallery, .media-gallery__item, div:has(.video-player)'),
+                                 parent.getAttribute('data-id'),
+                                 parent.getAttribute('data-toggle-open') || 'false')
+                    }
 
-//                     if (mutation.removedNodes.length > 0) {
-//                         console.log(`== Removed Nodes ==`)
-//                         console.log(mutation.removedNodes)
-//                         console.log(`== End Nodes ==`)
-//                     }
-//                     continue
-//                 }
+                    if (mutation.removedNodes.length > 0) {
+                        movedNodes = Array.from(mutation.removedNodes)
+                        if (!(parent.matches('div.status') && parent.hasAttribute('data-id') && movedNodes.some(node => node.matches('.media-gallery, .media-gallery__item, div:has(.video-player)')))) continue // if the target is not the parent of the media container we want, skip
+                        parent.querySelector('.media-toggle').replaceWith()
+                    }
+                }
             }
         }
 
         const observer = new MutationObserver(observeColumn)
         observer.observe(notificationColumn, {
             subtree: true,
-//          childList: true,
             attributeFilter: ["style"],
             attributeOldValue: true
         })
+
+        const observer2 = new MutationObserver(observeColumn)
+        observer2.observe(notificationColumn, { subtree: true, childList: true })
     }
 })();
