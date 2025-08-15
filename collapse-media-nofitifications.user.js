@@ -137,12 +137,12 @@ article[data-toggle-open="false"] .notification-ungrouped .status div:has(.video
         let parentElement = document.querySelector(parentElementSelector)
         if (!toggleTarget.checkVisibility()) {
             parentElement.setAttribute('data-toggle-open', 'true')
-            toggleTarget.style = toggleTarget.style.cssText + " display: grid;"
+            toggleTarget.style = toggleTarget.style.cssText + "display: grid;"
             toggle.childNodes[0].innerText = "Click to hide media"
         }
         else {
             parentElement.setAttribute('data-toggle-open', 'false')
-            toggleTarget.style = toggleTarget.style.cssText.replace(" display: grid;", "")
+            toggleTarget.style = toggleTarget.style.cssText.replace("display: grid;", "")
             toggle.childNodes[0].innerText = "Click to show media"
         }
     }
