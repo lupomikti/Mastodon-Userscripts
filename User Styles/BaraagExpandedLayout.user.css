@@ -1,8 +1,8 @@
 /* ==UserStyle==
 @name           Baraag Expanded Layout
-@version        1.0.3
+@version        1.1.0
 @author         lymalyk
-@description    Widens the main content column on Baraag
+@description    Widens the main content column on Baraag for large screen sizes. Also expands headers on profiles.
 @namespace      userstyles.world/user/lymalyk
 @license        MIT
 @supportURL     https://github.com/lupomikti/Mastodon-Userscripts/issues
@@ -22,5 +22,10 @@
         .compose-panel {
             width: 350px;
         }
+    }
+
+    .account__header__image {
+        height: auto;
+        max-height: 500px;
     }
 }
