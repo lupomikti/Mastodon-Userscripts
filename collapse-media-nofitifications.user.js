@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Mastodon - Collapse Media in Notifications By Default
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
+// @version      1.1.1
 // @description  Adds a collapsible toggle to posts in your notifications for media
 // @author       LupoMikti
 // @license      MIT
